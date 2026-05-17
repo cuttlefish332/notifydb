@@ -78,6 +78,10 @@ final class BillingController extends AbstractController
             $this->addFlash('error', 'Stripe could not start checkout: '.$exception->getMessage());
 
             return $this->redirectToRoute('billing_index');
+        } catch (\Throwable $exception) {
+            $this->addFlash('error', sprintf('Checkout could not start: %s: %s', $exception::class, $exception->getMessage()));
+
+            return $this->redirectToRoute('billing_index');
         }
 
         return $this->redirect((string) $session->url);
