@@ -15,7 +15,7 @@ final class StripeWebhookControllerTest extends WebTestCase
     use DatabaseTestTrait;
 
     private const WEBHOOK_SECRET = 'whsec_change_me';
-    private const PRO_PRICE_ID = 'price_1TXumrEB11HGdI9vvhrZd62e';
+    private const PRO_PRICE_ID = 'price_1TY8BVEB11HGdI9vMns5LrXm';
 
     private EntityManagerInterface $entityManager;
     private KernelBrowser $client;

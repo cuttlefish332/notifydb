@@ -71,7 +71,7 @@ stripe listen --forward-to http://127.0.0.1:8000/stripe/webhook
 
 Put the printed `whsec_...` value in `.env.local` as `STRIPE_WEBHOOK_SECRET`.
 
-NotifyDB Pro is implemented as a flat product plan in the app. In Stripe, use a recurring flat-rate `$5/month` Price for `STRIPE_PRO_PRICE_ID`. A metered Price may require usage reporting and different checkout behavior.
+NotifyDB Pro is implemented as a flat product plan in the app. In Stripe, use a recurring flat-rate `$9/month` Price for `STRIPE_PRO_PRICE_ID`. A metered Price may require usage reporting and different checkout behavior.
 
 ## Quotas
 
