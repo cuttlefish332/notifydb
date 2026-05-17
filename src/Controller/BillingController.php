@@ -49,17 +49,17 @@ final class BillingController extends AbstractController
         $user = $this->currentUser();
         $customerId = $user->getStripeCustomerId();
 
-        if ($customerId === null) {
-            $customer = $this->stripe->customers->create([
-                'email' => $user->getEmail(),
-                'metadata' => ['notifydb_user_id' => (string) $user->getId()],
-            ]);
-            $customerId = $customer->id;
-            $user->setStripeCustomerId($customerId);
-            $this->entityManager->flush();
-        }
-
         try {
+            if ($customerId === null) {
+                $customer = $this->stripe->customers->create([
+                    'email' => $user->getEmail(),
+                    'metadata' => ['notifydb_user_id' => (string) $user->getId()],
+                ]);
+                $customerId = $customer->id;
+                $user->setStripeCustomerId($customerId);
+                $this->entityManager->flush();
+            }
+
             $session = $this->stripe->checkout->sessions->create([
                 'mode' => 'subscription',
                 'customer' => $customerId,
