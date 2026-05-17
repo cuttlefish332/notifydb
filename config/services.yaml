@@ -7,6 +7,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.default_url: 'http://127.0.0.1:8000'
+    mailer.default_from_email: 'notifydb@example.com'
+    mailer.default_from_name: 'NotifyDB'
+    openai.default_model: 'gpt-5.4-nano'
 
 services:
     # default configuration for services in *this* file
@@ -21,3 +25,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Service\AiSummaryServiceInterface:
+        alias: App\Service\OpenAiSummaryService
+
+    App\Service\OpenAiSummaryService:
+        arguments:
+            $openAiApiKey: '%env(default::OPENAI_API_KEY)%'
+            $openAiModel: '%env(default:openai.default_model:OPENAI_MODEL)%'
+
+    App\Service\StripeSubscriptionService:
+        arguments:
+            $proPriceId: '%env(STRIPE_PRO_PRICE_ID)%'

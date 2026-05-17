@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in | NotifyDB{% endblock %}
+
+{% block body %}
+    <main class="auth-shell">
+        <div class="auth-wrap mx-auto">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-5 d-none d-lg-block">
+                    <aside class="auth-side p-4 p-xl-5">
+                        <span class="brand-mark brand-mark-lg mb-4">ND</span>
+                        <h1 class="h3 fw-bold mb-3">Readable database change alerts.</h1>
+                        <p class="mb-4">NotifyDB watches incoming change events and turns them into email notifications your team can scan quickly.</p>
+                        <ul class="feature-list">
+                            <li><span class="feature-dot"></span><span>Instant notifications, daily digests, and weekly digests.</span></li>
+                            <li><span class="feature-dot"></span><span>Project-level API tokens and settings.</span></li>
+                            <li><span class="feature-dot"></span><span>Optional AI summaries for Pro projects.</span></li>
+                        </ul>
+                    </aside>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="auth-card card h-100">
+                        <div class="card-body p-4 p-sm-5">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <span class="brand-mark">ND</span>
+                                <div>
+                                    <div class="fw-bold">NotifyDB</div>
+                                    <div class="text-body-secondary small">Database change alerts</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="page-kicker mb-2">Welcome back</div>
+                                <h2 class="h3 fw-bold mb-1">Log in</h2>
+                                <p class="text-body-secondary mb-0">Open your dashboard and continue monitoring database changes.</p>
+                            </div>
+
+                            {% if error %}
+                                <div class="alert alert-danger" role="alert">
+                                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                                </div>
+                            {% endif %}
+
+                            <form method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="username">Email</label>
+                                    <input class="form-control" type="email" value="{{ last_username }}" name="_username" id="username" autocomplete="email" required autofocus>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label" for="password">Password</label>
+                                    <input class="form-control" type="password" name="_password" id="password" autocomplete="current-password" required>
+                                </div>
+
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                                <button class="btn btn-dark w-100" type="submit">Log in</button>
+                            </form>
+
+                            <p class="text-center text-body-secondary mt-4 mb-0">
+                                No account yet?
+                                <a href="{{ path('app_register') }}">Create one</a>
+                            </p>
+                            <p class="text-center text-body-secondary small mt-2 mb-0">
+                                Want to see the integration first?
+                                <a href="{{ path('docs_index') }}">Read the docs</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

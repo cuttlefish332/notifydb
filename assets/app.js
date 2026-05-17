@@ -7,4 +7,33 @@ import './stimulus_bootstrap.js';
  */
 import './styles/app.css';
 
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
+document.addEventListener('click', async (event) => {
+    if (!(event.target instanceof Element)) {
+        return;
+    }
+
+    const button = event.target.closest('[data-copy-target]');
+    if (!(button instanceof HTMLButtonElement)) {
+        return;
+    }
+
+    const target = document.querySelector(button.dataset.copyTarget);
+    const text = target?.textContent?.trim();
+    if (!text) {
+        return;
+    }
+
+    const originalText = button.textContent;
+    try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = 'Copied';
+        window.setTimeout(() => {
+            button.textContent = originalText;
+        }, 1600);
+    } catch {
+        button.textContent = 'Copy failed';
+        window.setTimeout(() => {
+            button.textContent = originalText;
+        }, 1600);
+    }
+});

@@ -1,0 +1,348 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard | NotifyDB{% endblock %}
+
+{% block body %}
+    <div class="app-shell">
+        <nav class="app-nav">
+            <div class="container py-3 d-flex align-items-center justify-content-between gap-3">
+                <a class="d-inline-flex align-items-center gap-2 text-decoration-none text-dark" href="{{ path('app_dashboard') }}">
+                    <span class="brand-mark">ND</span>
+                    <span class="fw-bold">NotifyDB</span>
+                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('docs_index') }}">Docs</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('billing_index') }}">Billing</a>
+                    <a class="btn btn-dark btn-sm" href="{{ path('app_logout') }}">Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container py-5">
+            {% set apiEndpoint = app.request.schemeAndHttpHost ~ path('api_change_events_create') %}
+            {% set revealToken = tokenReveal ? tokenReveal.token : 'YOUR_PROJECT_TOKEN' %}
+            {% set curlSnippet %}curl -X POST {{ apiEndpoint }} \
+  -H "Authorization: Bearer {{ revealToken }}" \
+  -H "Content-Type: application/json" \
+  -d '{"tableName":"users","recordId":"42","eventType":"updated","oldValues":{"email":"old@example.com"},"newValues":{"email":"new@example.com"}}'{% endset %}
+            {% set jsSnippet %}await fetch('{{ apiEndpoint }}', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer {{ revealToken }}',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tableName: 'users',
+    recordId: '42',
+    eventType: 'updated',
+    oldValues: { email: 'old@example.com' },
+    newValues: { email: 'new@example.com' }
+  })
+});{% endset %}
+
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+                <div>
+                    <div class="page-kicker mb-2">Workspace</div>
+                    <h1 class="page-title mb-2">NotifyDB dashboard</h1>
+                    <p class="text-body-secondary mb-0">Monitor usage, test ingestion, and manage project notification settings.</p>
+                </div>
+                <a class="btn btn-dark" href="#create-project">New project</a>
+            </div>
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'error' ? 'danger' : label }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {% if tokenReveal %}
+                <div class="nd-card setup-panel p-4 mb-4" id="token-reveal">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                        <div>
+                            <div class="eyebrow mb-1">One-time API token</div>
+                            <h2 class="h5 mb-1">{{ tokenReveal.projectName }}</h2>
+                            <p class="text-body-secondary mb-0">Save this token now. NotifyDB stores only a hash, so it cannot be revealed again.</p>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#plain-api-token">Copy token</button>
+                    </div>
+                    <pre class="code-block p-3 mb-4 small"><code id="plain-api-token">{{ tokenReveal.token }}</code></pre>
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="snippet-header">
+                                <span>cURL</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#curl-snippet-reveal">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small mb-0"><code id="curl-snippet-reveal">{{ curlSnippet }}</code></pre>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="snippet-header">
+                                <span>JavaScript</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#js-snippet-reveal">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small mb-0"><code id="js-snippet-reveal">{{ jsSnippet }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="metric-card p-4 h-100">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="metric-label">Emails</div>
+                            <span class="metric-icon metric-icon-green">@</span>
+                        </div>
+                        <div class="metric-value">{{ sentThisWeek }} / {{ user.weeklyEmailLimit }}</div>
+                        <div class="text-body-secondary small mt-1 mb-3">{{ remainingEmailsThisWeek }} remaining this week</div>
+                        <div class="usage-bar usage-bar-green">
+                            <span style="width: {{ user.weeklyEmailLimit > 0 ? ((sentThisWeek / user.weeklyEmailLimit) * 100)|round(0, 'floor') : 0 }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card p-4 h-100">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="metric-label">Events</div>
+                            <span class="metric-icon">#</span>
+                        </div>
+                        <div class="metric-value">{{ eventsThisWeek }} / {{ user.weeklyEventLimit }}</div>
+                        <div class="text-body-secondary small mt-1 mb-3">{{ remainingEventsThisWeek }} remaining this week</div>
+                        <div class="usage-bar">
+                            <span style="width: {{ user.weeklyEventLimit > 0 ? ((eventsThisWeek / user.weeklyEventLimit) * 100)|round(0, 'floor') : 0 }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card p-4 h-100">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="metric-label">AI summaries</div>
+                            <span class="metric-icon metric-icon-amber">AI</span>
+                        </div>
+                        <div class="metric-value">{{ aiSummariesThisWeek }} / {{ user.weeklyAiSummaryLimit }}</div>
+                        <div class="text-body-secondary small mt-1 mb-3">{{ user.pro ? remainingAiSummariesThisWeek ~ ' remaining this week' : 'Upgrade to Pro to enable' }}</div>
+                        <div class="usage-bar usage-bar-amber">
+                            <span style="width: {{ user.weeklyAiSummaryLimit > 0 ? ((aiSummariesThisWeek / user.weeklyAiSummaryLimit) * 100)|round(0, 'floor') : 0 }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nd-card p-4 mb-4">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <div class="eyebrow mb-1">Setup</div>
+                        <h2 class="h5 mb-1">Plug NotifyDB into your app</h2>
+                    </div>
+                    <span class="status-pill {{ projectRows is not empty and eventsThisWeek > 0 ? 'status-pill-on' : 'status-pill-muted' }}">
+                        {{ projectRows is not empty and eventsThisWeek > 0 ? 'Connected' : 'In progress' }}
+                    </span>
+                </div>
+                <div class="setup-checklist">
+                    <div class="setup-step {{ projectRows is not empty ? 'setup-step-done' : '' }}">
+                        <span class="setup-step-mark">{{ projectRows is not empty ? 'OK' : '1' }}</span>
+                        <span>Create a project</span>
+                    </div>
+                    <div class="setup-step {{ tokenReveal ? 'setup-step-done' : '' }}">
+                        <span class="setup-step-mark">{{ tokenReveal ? 'OK' : '2' }}</span>
+                        <span>Copy and save the one-time API token</span>
+                    </div>
+                    <div class="setup-step {{ eventsThisWeek > 0 ? 'setup-step-done' : '' }}">
+                        <span class="setup-step-mark">{{ eventsThisWeek > 0 ? 'OK' : '3' }}</span>
+                        <span>Send a test event from cURL or JavaScript</span>
+                    </div>
+                    <div class="setup-step {{ eventsThisWeek > 0 ? 'setup-step-done' : '' }}">
+                        <span class="setup-step-mark">{{ eventsThisWeek > 0 ? 'OK' : '4' }}</span>
+                        <span>Confirm the event appears below</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="billing-cta nd-card mb-4">
+                <div class="p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="eyebrow mb-1">{{ user.pro ? 'Current plan' : 'Upgrade' }}</div>
+                        <h2 class="h5 mb-1">{{ user.pro ? 'NotifyDB Pro is active' : 'Need more room?' }}</h2>
+                        <p class="text-body-secondary mb-0">
+                            {{ user.pro ? 'Manage your subscription and billing details.' : 'Upgrade to Pro for 100 emails per week, 5,000 events per week, and 500 AI summaries per week.' }}
+                        </p>
+                    </div>
+                    <a class="btn btn-dark" href="{{ path('billing_index') }}">{{ user.pro ? 'Manage billing' : 'Upgrade to Pro' }}</a>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <div class="page-kicker mb-1">Projects</div>
+                    <h2 class="h4 mb-0">Ingestion endpoints</h2>
+                </div>
+            </div>
+
+            {% if projectRows is empty %}
+                <div class="nd-card p-4 mb-4">
+                    <h3 class="h5">Create your first project</h3>
+                    <p class="text-body-secondary">Projects hold API tokens, notification settings, and incoming database events.</p>
+                </div>
+            {% endif %}
+
+            <section class="nd-card p-4 mb-4" id="create-project">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <div class="eyebrow mb-1">Project</div>
+                        <h2 class="h5 mb-1">Create an ingestion endpoint</h2>
+                        <p class="text-body-secondary mb-0">You will get a one-time bearer token and copy-ready integration snippets.</p>
+                    </div>
+                </div>
+                <form method="post" action="{{ path('dashboard_project_create') }}" class="row g-3">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('project_create') }}">
+                    <div class="col-md-6">
+                        <label class="form-label" for="project-name">Project name</label>
+                        <input class="form-control" id="project-name" name="name" required maxlength="160" placeholder="Production app">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="project-email">Notification email</label>
+                        <input class="form-control" id="project-email" type="email" name="notificationEmail" value="{{ user.email }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="project-frequency">Notifications</label>
+                        <select class="form-select" id="project-frequency" name="notificationFrequency">
+                            <option value="instant">Instant</option>
+                            <option value="daily">Daily digest</option>
+                            <option value="weekly">Weekly digest</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <label class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="aiSummariesEnabled" value="1">
+                            <span class="form-check-label">Generate AI summaries for this project</span>
+                        </label>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-dark" type="submit">Create project and token</button>
+                    </div>
+                </form>
+            </section>
+
+            {% if projectRows is not empty %}
+                <div class="vstack gap-3">
+                    {% for row in projectRows %}
+                        {% set project = row.project %}
+                        <section class="project-card nd-card" id="project-{{ project.id }}">
+                            <div class="project-card-header p-4">
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                                    <div>
+                                        <h3 class="h5 mb-2">{{ project.name }}</h3>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="status-pill">Token <code class="ms-1">{{ project.apiTokenPrefix }}</code></span>
+                                            <span class="status-pill">{{ project.notificationFrequency.value|capitalize }}</span>
+                                            <span class="status-pill {{ project.aiSummariesEnabled and user.pro ? 'status-pill-on' : 'status-pill-muted' }}">AI {{ project.aiSummariesEnabled and user.pro ? 'on' : 'off' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <form method="post" action="{{ path('dashboard_project_regenerate_token', {id: project.id}) }}" data-turbo="false" onsubmit="return confirm('Regenerate the API token for {{ project.name|e('js') }}? The old token will stop working.');">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('project_regenerate_' ~ project.id) }}">
+                                            <button class="btn btn-outline-secondary btn-sm" type="submit">Regenerate token</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4">
+                                <div class="row g-4 align-items-start mb-4">
+                                    <div class="col-lg-5">
+                                        <form method="post" action="{{ path('dashboard_project_update', {id: project.id}) }}" class="settings-form">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('project_update_' ~ project.id) }}">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="project-{{ project.id }}-name">Project name</label>
+                                                <input class="form-control" id="project-{{ project.id }}-name" name="name" required maxlength="160" value="{{ project.name }}">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label" for="project-{{ project.id }}-email">Notification email</label>
+                                                <input class="form-control" id="project-{{ project.id }}-email" type="email" name="notificationEmail" value="{{ project.notificationEmail }}">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label" for="project-{{ project.id }}-frequency">Notifications</label>
+                                                <select class="form-select" id="project-{{ project.id }}-frequency" name="notificationFrequency">
+                                                    <option value="instant" {{ project.notificationFrequency.value == 'instant' ? 'selected' }}>Instant</option>
+                                                    <option value="daily" {{ project.notificationFrequency.value == 'daily' ? 'selected' }}>Daily digest</option>
+                                                    <option value="weekly" {{ project.notificationFrequency.value == 'weekly' ? 'selected' }}>Weekly digest</option>
+                                                    <option value="off" {{ project.notificationFrequency.value == 'off' ? 'selected' }}>Off</option>
+                                                </select>
+                                            </div>
+                                            <label class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" name="aiSummariesEnabled" value="1" {{ project.aiSummariesEnabled ? 'checked' }}>
+                                                <span class="form-check-label">Generate AI summaries</span>
+                                            </label>
+                                            <button class="btn btn-outline-secondary btn-sm" type="submit">Save settings</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="snippet-header">
+                                            <span>cURL test event</span>
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#curl-snippet-{{ project.id }}">Copy</button>
+                                        </div>
+                                        <pre class="code-block p-3 small mb-3"><code id="curl-snippet-{{ project.id }}">curl -X POST {{ apiEndpoint }} \
+  -H "Authorization: Bearer YOUR_PROJECT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tableName":"users","recordId":"42","eventType":"updated","oldValues":{"email":"old@example.com"},"newValues":{"email":"new@example.com"}}'</code></pre>
+                                        <div class="snippet-header">
+                                            <span>JavaScript test event</span>
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#js-snippet-{{ project.id }}">Copy</button>
+                                        </div>
+                                        <pre class="code-block p-3 small mb-0"><code id="js-snippet-{{ project.id }}">await fetch('{{ apiEndpoint }}', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_PROJECT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tableName: 'users',
+    recordId: '42',
+    eventType: 'updated',
+    oldValues: { email: 'old@example.com' },
+    newValues: { email: 'new@example.com' }
+  })
+});</code></pre>
+                                    </div>
+                                </div>
+
+                                <div class="recent-events">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                        <div class="eyebrow">Recent events</div>
+                                        <span class="text-body-secondary small">{{ row.recentEvents|length }} shown</span>
+                                    </div>
+                                    {% if row.recentEvents is empty %}
+                                        <div class="empty-events">No events received yet. Send the test payload above and refresh this page.</div>
+                                    {% else %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle mb-0">
+                                                <thead>
+                                                <tr>
+                                                    <th>Event</th>
+                                                    <th>Record</th>
+                                                    <th>Received</th>
+                                                    <th>Summary</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for event in row.recentEvents %}
+                                                    <tr>
+                                                        <td><span class="status-pill">{{ event.eventType.value }}</span> {{ event.tableName }}</td>
+                                                        <td><code>{{ event.recordId }}</code></td>
+                                                        <td>{{ event.createdAt|date('M j, g:ia') }}</td>
+                                                        <td>{{ event.humanSummary ?: '-' }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </section>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+{% endblock %}

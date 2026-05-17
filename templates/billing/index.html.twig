@@ -1,0 +1,153 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Billing | NotifyDB{% endblock %}
+
+{% block body %}
+    <div class="app-shell">
+        <nav class="app-nav">
+            <div class="container py-3 d-flex align-items-center justify-content-between gap-3">
+                <a class="d-inline-flex align-items-center gap-2 text-decoration-none text-dark" href="{{ path('app_dashboard') }}">
+                    <span class="brand-mark">ND</span>
+                    <span class="fw-bold">NotifyDB</span>
+                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('app_dashboard') }}">Dashboard</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('docs_index') }}">Docs</a>
+                    <a class="btn btn-dark btn-sm" href="{{ path('app_logout') }}">Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+                        <div>
+                            <div class="page-kicker mb-2">Billing</div>
+                            <h1 class="page-title mb-2">Plan and usage</h1>
+                            <p class="text-body-secondary mb-0">Manage your NotifyDB subscription and weekly notification capacity.</p>
+                        </div>
+                        <a class="btn btn-outline-secondary" href="{{ path('app_dashboard') }}">Back to dashboard</a>
+                    </div>
+
+                    {% for label, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ label == 'error' ? 'danger' : label }}" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    <div class="nd-card p-4 mb-4">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div>
+                                <div class="eyebrow mb-1">Current plan</div>
+                                <h2 class="h4 mt-1 mb-2">{{ user.plan.value|capitalize }}</h2>
+                                <p class="mb-3 text-body-secondary">{{ sentThisWeek }} of {{ user.weeklyEmailLimit }} emails used this week. {{ remainingThisWeek }} remaining.</p>
+                                <div class="usage-bar usage-bar-green">
+                                    <span style="width: {{ user.weeklyEmailLimit > 0 ? ((sentThisWeek / user.weeklyEmailLimit) * 100)|round(0, 'floor') : 0 }}%;"></span>
+                                </div>
+                            </div>
+                            <span class="status-pill {{ user.pro ? 'status-pill-on' : 'status-pill-muted' }}">{{ user.plan.value|upper }}</span>
+                        </div>
+                    </div>
+
+                    {% if user.pro %}
+                        <div class="nd-card p-4 mb-4">
+                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                                <div>
+                                    <div class="eyebrow mb-1">Subscription</div>
+                                    <h2 class="h5 mb-1">
+                                        {% if user.stripeSubscriptionId is empty %}
+                                            Pro access active
+                                        {% else %}
+                                            {{ user.stripeCancelAtPeriodEnd ? 'Cancellation scheduled' : 'Active Pro subscription' }}
+                                        {% endif %}
+                                    </h2>
+                                    <p class="text-body-secondary mb-0">
+                                        {% if user.stripeSubscriptionId is empty %}
+                                            Stripe has not synced a subscription ID for this account yet, but you can still schedule cancellation now.
+                                        {% elseif user.stripeCancelAtPeriodEnd %}
+                                            Pro access remains active until the current billing period ends.
+                                        {% else %}
+                                            Manage your subscription from NotifyDB or open Stripe for invoices and payment methods.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <span class="status-pill {{ user.stripeCancelAtPeriodEnd ? 'status-pill-muted' : 'status-pill-on' }}">
+                                    {{ user.stripeSubscriptionStatus ?: 'active' }}
+                                </span>
+                            </div>
+
+                            <dl class="row mb-4 small">
+                                <dt class="col-sm-4 text-body-secondary">Subscription ID</dt>
+                                <dd class="col-sm-8"><code>{{ user.stripeSubscriptionId ?: 'Not synced yet' }}</code></dd>
+                                <dt class="col-sm-4 text-body-secondary">{{ user.stripeCancelAtPeriodEnd ? 'Ends on' : 'Renews on' }}</dt>
+                                <dd class="col-sm-8">{{ user.stripeCurrentPeriodEnd ? user.stripeCurrentPeriodEnd|date('M j, Y') : 'Not available yet' }}</dd>
+                            </dl>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if user.stripeCustomerId %}
+                                    <form method="post" action="{{ path('billing_portal') }}" data-turbo="false">
+                                        <button class="btn btn-outline-secondary" type="submit">Payment details</button>
+                                    </form>
+                                {% endif %}
+
+                                {% if user.stripeCancelAtPeriodEnd %}
+                                    <form method="post" action="{{ path('billing_resume') }}" data-turbo="false">
+                                        <button class="btn btn-dark" type="submit">Keep subscription</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="{{ path('billing_cancel') }}" data-turbo="false" onsubmit="return confirm('Cancel NotifyDB Pro at the end of the current billing period?');">
+                                        <button class="btn btn-outline-danger" type="submit">Cancel subscription</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-4">
+                        <div class="col-lg-5">
+                            <div class="billing-plan p-4 h-100">
+                                <div class="eyebrow mb-2">Free</div>
+                                <h2 class="h5">Starter monitoring</h2>
+                                <div class="price-text my-3">$0</div>
+                                <ul class="check-list">
+                                    <li>5 emails per week</li>
+                                    <li>100 events per week</li>
+                                    <li>Daily and weekly digests</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="billing-plan p-4 h-100 border-dark">
+                                <div class="d-flex align-items-start justify-content-between gap-3">
+                                    <div>
+                                        <div class="eyebrow mb-2">NotifyDB Pro</div>
+                                        <h2 class="h5">Readable alerts at scale</h2>
+                                    </div>
+                                    <span class="status-pill status-pill-on">Recommended</span>
+                                </div>
+                                <div class="d-flex align-items-end gap-2 my-3">
+                                    <div class="price-text">$5</div>
+                                    <div class="text-body-secondary mb-1">per month</div>
+                                </div>
+                                <ul class="check-list mb-4">
+                                    <li>100 emails per week</li>
+                                    <li>5,000 events per week</li>
+                                    <li>500 AI summaries per week</li>
+                                </ul>
+
+                                {% if not user.pro %}
+                                    <form method="post" action="{{ path('billing_checkout') }}" data-turbo="false">
+                                        <button class="btn btn-dark" type="submit">Upgrade to Pro</button>
+                                    </form>
+                                {% else %}
+                                    <a class="btn btn-dark" href="#top" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">Manage subscription</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+{% endblock %}

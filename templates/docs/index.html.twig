@@ -1,0 +1,241 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Docs | NotifyDB{% endblock %}
+
+{% block body %}
+    <div class="app-shell docs-page">
+        <nav class="app-nav">
+            <div class="container py-3 d-flex align-items-center justify-content-between gap-3">
+                <a class="d-inline-flex align-items-center gap-2 text-decoration-none text-dark" href="{{ app.user ? path('app_dashboard') : path('app_login') }}">
+                    <span class="brand-mark">ND</span>
+                    <span class="fw-bold">NotifyDB</span>
+                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if app.user %}
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('app_dashboard') }}">Dashboard</a>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('billing_index') }}">Billing</a>
+                        <a class="btn btn-dark btn-sm" href="{{ path('app_logout') }}">Logout</a>
+                    {% else %}
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('app_login') }}">Log in</a>
+                        <a class="btn btn-dark btn-sm" href="{{ path('app_register') }}">Create account</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <main class="container py-5">
+            {% set apiEndpoint = app.request.schemeAndHttpHost ~ path('api_change_events_create') %}
+
+            <section class="docs-hero mb-5">
+                <div class="row g-4 align-items-end">
+                    <div class="col-lg-7">
+                        <div class="page-kicker mb-2">Developer docs</div>
+                        <h1 class="docs-title mb-3">Send readable database change alerts from any app.</h1>
+                        <p class="docs-lede mb-0">NotifyDB gives each project a bearer token and a single JSON endpoint. Post a change event when your app creates, updates, or deletes a record; NotifyDB handles notification timing, quotas, and optional summaries.</p>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="docs-signal">
+                            <div class="docs-signal-row">
+                                <span>Endpoint</span>
+                                <code>POST /api/events</code>
+                            </div>
+                            <div class="docs-signal-row">
+                                <span>Auth</span>
+                                <code>Bearer ndb_...</code>
+                            </div>
+                            <div class="docs-signal-row">
+                                <span>Payload</span>
+                                <code>created | updated | deleted</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="docs-layout">
+                <aside class="docs-sidebar">
+                    <a href="#quickstart">Quickstart</a>
+                    <a href="#examples">Examples</a>
+                    <a href="#payload">Payload</a>
+                    <a href="#responses">Responses</a>
+                    <a href="#production">Production notes</a>
+                </aside>
+
+                <div class="docs-content">
+                    <section class="docs-section" id="quickstart">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">01</span>
+                            <div>
+                                <h2>Quickstart</h2>
+                                <p>Get one event into NotifyDB first. Once that works, put the same call wherever your app already knows a record changed.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-cards">
+                            <div class="docs-card">
+                                <h3>Create a project</h3>
+                                <p>Open the dashboard, create a project, and choose where notifications should go. Each project has its own token and notification settings.</p>
+                            </div>
+                            <div class="docs-card">
+                                <h3>Save the token</h3>
+                                <p>The full token is shown once. Store it in your server environment, not in browser JavaScript or a public repo.</p>
+                            </div>
+                            <div class="docs-card">
+                                <h3>Post a test event</h3>
+                                <p>Send the sample payload below. The new event should appear in the project's recent events list right away.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="docs-section" id="examples">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">02</span>
+                            <div>
+                                <h2>Examples</h2>
+                                <p>Use cURL to prove the token works. Use the JavaScript example from a server route, worker, webhook handler, or API backend.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-code-panel">
+                            <div class="snippet-header">
+                                <span>cURL</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#docs-curl">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small"><code id="docs-curl">curl -X POST {{ apiEndpoint }} \
+  -H "Authorization: Bearer YOUR_PROJECT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tableName":"users","recordId":"42","eventType":"updated","oldValues":{"email":"old@example.com"},"newValues":{"email":"new@example.com"}}'</code></pre>
+                        </div>
+
+                        <div class="docs-code-panel">
+                            <div class="snippet-header">
+                                <span>JavaScript</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#docs-js">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small"><code id="docs-js">await fetch('{{ apiEndpoint }}', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + process.env.NOTIFYDB_TOKEN,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tableName: 'users',
+    recordId: '42',
+    eventType: 'updated',
+    oldValues: { email: 'old@example.com' },
+    newValues: { email: 'new@example.com' }
+  })
+});</code></pre>
+                        </div>
+                    </section>
+
+                    <section class="docs-section" id="payload">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">03</span>
+                            <div>
+                                <h2>Payload</h2>
+                                <p>The request body is intentionally small. Send the record identity, the change type, and the before/after values you want people to see.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-table-wrap">
+                            <table class="table docs-table mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Type</th>
+                                    <th>Notes</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><code>tableName</code></td>
+                                    <td>string</td>
+                                    <td>The table, collection, model, or resource that changed.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>recordId</code></td>
+                                    <td>string or integer</td>
+                                    <td>The ID your team would use to find the record again.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>eventType</code></td>
+                                    <td>string</td>
+                                    <td>One of <code>created</code>, <code>updated</code>, or <code>deleted</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>oldValues</code></td>
+                                    <td>object</td>
+                                    <td>Values before the change. Use an empty object for creates.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>newValues</code></td>
+                                    <td>object</td>
+                                    <td>Values after the change. Use an empty object for deletes.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="docs-section" id="responses">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">04</span>
+                            <div>
+                                <h2>Responses</h2>
+                                <p>A successful request means NotifyDB accepted the event. Notification delivery may still happen asynchronously depending on the project's frequency.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-code-panel">
+                            <div class="snippet-header">
+                                <span>201 Created</span>
+                            </div>
+                            <pre class="code-block p-3 small"><code>{
+  "id": 123,
+  "createdAt": "2026-05-17T14:08:21+00:00",
+  "humanSummary": "User ID 42 was updated: email changed."
+}</code></pre>
+                        </div>
+
+                        <div class="docs-cards docs-cards-two">
+                            <div class="docs-card">
+                                <h3>Authentication errors</h3>
+                                <p><code>401</code> means the bearer token is missing or invalid. Regenerate the project token if the original token was lost.</p>
+                            </div>
+                            <div class="docs-card">
+                                <h3>Validation and quotas</h3>
+                                <p><code>422</code> means a payload field is missing or malformed. <code>429</code> means the weekly event limit has been reached.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="docs-section" id="production">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">05</span>
+                            <div>
+                                <h2>Production notes</h2>
+                                <p>Keep the integration boring. NotifyDB should sit beside your existing write path without becoming a hard dependency for saving user data.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-note-list">
+                            <div>
+                                <h3>Call NotifyDB from trusted code</h3>
+                                <p>Use your backend, API route, worker, or webhook processor. Do not expose project tokens in client-side JavaScript.</p>
+                            </div>
+                            <div>
+                                <h3>Send useful fields, not everything</h3>
+                                <p>Include the values a teammate would need to understand the change. Skip secrets, large blobs, and noisy internal metadata.</p>
+                            </div>
+                            <div>
+                                <h3>Do not block critical writes</h3>
+                                <p>If your app can queue background jobs, enqueue the NotifyDB call after the database write succeeds. If the call fails, retry it like any other outbound webhook.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+{% endblock %}

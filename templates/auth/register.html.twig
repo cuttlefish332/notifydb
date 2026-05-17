@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register | NotifyDB{% endblock %}
+
+{% block body %}
+    <main class="auth-shell">
+        <div class="auth-wrap mx-auto">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-5 d-none d-lg-block">
+                    <aside class="auth-side p-4 p-xl-5">
+                        <span class="brand-mark brand-mark-lg mb-4">ND</span>
+                        <h1 class="h3 fw-bold mb-3">Start monitoring changes in minutes.</h1>
+                        <p class="mb-4">Create a project, copy its bearer token, and send database-change payloads to NotifyDB.</p>
+                        <ul class="feature-list">
+                            <li><span class="feature-dot"></span><span>Secure per-project API tokens.</span></li>
+                            <li><span class="feature-dot"></span><span>Instant, daily, weekly, or paused notifications.</span></li>
+                            <li><span class="feature-dot"></span><span>Readable AI summaries on Pro.</span></li>
+                        </ul>
+                    </aside>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="auth-card card h-100">
+                        <div class="card-body p-4 p-sm-5">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <span class="brand-mark">ND</span>
+                                <div>
+                                    <div class="fw-bold">NotifyDB</div>
+                                    <div class="text-body-secondary small">Database change alerts</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="page-kicker mb-2">Get started</div>
+                                <h2 class="h3 fw-bold mb-1">Create an account</h2>
+                                <p class="text-body-secondary mb-0">Set up projects, notifications, and API tokens from one dashboard.</p>
+                            </div>
+
+                            {{ form_start(registrationForm) }}
+                                {{ form_row(registrationForm.email) }}
+                                {{ form_row(registrationForm.plainPassword, { label: 'Password' }) }}
+                                <button class="btn btn-dark w-100 mt-2" type="submit">Create account</button>
+                            {{ form_end(registrationForm) }}
+
+                            <p class="text-center text-body-secondary mt-4 mb-0">
+                                Already have an account?
+                                <a href="{{ path('app_login') }}">Log in</a>
+                            </p>
+                            <p class="text-center text-body-secondary small mt-2 mb-0">
+                                Prefer to inspect the API first?
+                                <a href="{{ path('docs_index') }}">Read the docs</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
