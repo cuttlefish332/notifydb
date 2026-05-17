@@ -1,0 +1,20 @@
+{
+  "name": "notifydb-db-agent",
+  "version": "0.1.0",
+  "description": "Database-native outbox forwarder for NotifyDB.",
+  "type": "module",
+  "bin": {
+    "notifydb-db-agent": "./bin/notifydb-db-agent.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mysql2": "^3.15.3",
+    "pg": "^8.16.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

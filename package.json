@@ -6,8 +6,12 @@
   "directories": {
     "test": "tests"
   },
+  "workspaces": [
+    "packages/db-agent"
+  ],
   "scripts": {
     "build:css": "tailwindcss -i tailwind/input.css -o assets/styles/app.css --minify",
+    "test:agent": "npm --workspace packages/db-agent test",
     "watch:css": "tailwindcss -i tailwind/input.css -o assets/styles/app.css --watch"
   },
   "repository": {

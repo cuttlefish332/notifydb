@@ -55,7 +55,8 @@
             <div class="docs-layout">
                 <aside class="docs-sidebar">
                     <a href="#quickstart">Quickstart</a>
-                    <a href="#examples">Examples</a>
+                    <a href="#database-native">Database-native</a>
+                    <a href="#examples">HTTP examples</a>
                     <a href="#payload">Payload</a>
                     <a href="#responses">Responses</a>
                     <a href="#production">Production notes</a>
@@ -67,7 +68,7 @@
                             <span class="docs-step">01</span>
                             <div>
                                 <h2>Quickstart</h2>
-                                <p>Get one event into NotifyDB first. Once that works, put the same call wherever your app already knows a record changed.</p>
+                                <p>Create a project, save its token, then choose database-native triggers or a direct HTTP call for your first event.</p>
                             </div>
                         </div>
 
@@ -81,17 +82,73 @@
                                 <p>The full token is shown once. Store it in your server environment, not in browser JavaScript or a public repo.</p>
                             </div>
                             <div class="docs-card">
-                                <h3>Post a test event</h3>
-                                <p>Send the sample payload below. The new event should appear in the project's recent events list right away.</p>
+                                <h3>Choose an integration</h3>
+                                <p>Use the database agent for PostgreSQL/MySQL, or send the same event payload from your application code.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="docs-section" id="database-native">
+                        <div class="docs-section-heading">
+                            <span class="docs-step">02</span>
+                            <div>
+                                <h2>Database-native setup</h2>
+                                <p>Install lightweight triggers in PostgreSQL or MySQL. Triggers write to a local outbox table; the NotifyDB agent forwards events without blocking your app's write path.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-cards docs-cards-two">
+                            <div class="docs-card">
+                                <h3>PostgreSQL</h3>
+                                <p>Set <code>DATABASE_URL</code> to a PostgreSQL connection string and list tables as <code>public.users,public.orders</code>.</p>
+                            </div>
+                            <div class="docs-card">
+                                <h3>MySQL</h3>
+                                <p>Set <code>DATABASE_URL</code> to a MySQL connection string and list tables as <code>users,orders</code> or <code>app.users</code>.</p>
+                            </div>
+                        </div>
+
+                        <div class="docs-code-panel">
+                            <div class="snippet-header">
+                                <span>Install triggers</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#docs-db-install">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small"><code id="docs-db-install">npm install -g notifydb-db-agent
+notifydb-db-agent init
+
+# edit .env.notifydb, then:
+notifydb-db-agent install</code></pre>
+                        </div>
+
+                        <div class="docs-code-panel">
+                            <div class="snippet-header">
+                                <span>Run the forwarder</span>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-copy-target="#docs-db-run">Copy</button>
+                            </div>
+                            <pre class="code-block p-3 small"><code id="docs-db-run">NOTIFYDB_API_URL={{ app.request.schemeAndHttpHost }} \
+NOTIFYDB_PROJECT_TOKEN=YOUR_PROJECT_TOKEN \
+DATABASE_URL=postgresql://app:password@localhost:5432/app \
+NOTIFYDB_TABLES=public.users,public.orders \
+notifydb-db-agent run</code></pre>
+                        </div>
+
+                        <div class="docs-note-list">
+                            <div>
+                                <h3>Single-column primary keys only</h3>
+                                <p>The installer validates each watched table. Tables without a primary key or with composite primary keys are skipped with a clear error.</p>
+                            </div>
+                            <div>
+                                <h3>Outbox delivery</h3>
+                                <p>The agent retries failed sends and stores the last error in <code>notifydb_outbox</code>. Database writes do not wait for NotifyDB.</p>
                             </div>
                         </div>
                     </section>
 
                     <section class="docs-section" id="examples">
                         <div class="docs-section-heading">
-                            <span class="docs-step">02</span>
+                            <span class="docs-step">03</span>
                             <div>
-                                <h2>Examples</h2>
+                                <h2>HTTP examples</h2>
                                 <p>Use cURL to prove the token works. Use the JavaScript example from a server route, worker, webhook handler, or API backend.</p>
                             </div>
                         </div>
@@ -131,7 +188,7 @@
 
                     <section class="docs-section" id="payload">
                         <div class="docs-section-heading">
-                            <span class="docs-step">03</span>
+                            <span class="docs-step">04</span>
                             <div>
                                 <h2>Payload</h2>
                                 <p>The request body is intentionally small. Send the record identity, the change type, and the before/after values you want people to see.</p>
@@ -180,7 +237,7 @@
 
                     <section class="docs-section" id="responses">
                         <div class="docs-section-heading">
-                            <span class="docs-step">04</span>
+                            <span class="docs-step">05</span>
                             <div>
                                 <h2>Responses</h2>
                                 <p>A successful request means NotifyDB accepted the event. Notification delivery may still happen asynchronously depending on the project's frequency.</p>
@@ -212,7 +269,7 @@
 
                     <section class="docs-section" id="production">
                         <div class="docs-section-heading">
-                            <span class="docs-step">05</span>
+                            <span class="docs-step">06</span>
                             <div>
                                 <h2>Production notes</h2>
                                 <p>Keep the integration boring. NotifyDB should sit beside your existing write path without becoming a hard dependency for saving user data.</p>
@@ -221,8 +278,8 @@
 
                         <div class="docs-note-list">
                             <div>
-                                <h3>Call NotifyDB from trusted code</h3>
-                                <p>Use your backend, API route, worker, or webhook processor. Do not expose project tokens in client-side JavaScript.</p>
+                                <h3>Use trusted infrastructure</h3>
+                                <p>Run the database agent beside your application or call NotifyDB from backend code. Do not expose project tokens in client-side JavaScript.</p>
                             </div>
                             <div>
                                 <h3>Send useful fields, not everything</h3>

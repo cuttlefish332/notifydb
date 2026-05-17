@@ -8,6 +8,7 @@ Symfony MVP for database-change email notifications.
 cp .env.local.example .env.local
 npm install
 npm run build:css
+npm run test:agent
 bin/console doctrine:migrations:migrate
 docker compose up -d
 symfony server:start -d
@@ -74,6 +75,26 @@ stripe listen --forward-to http://127.0.0.1:8000/stripe/webhook
 Put the printed `whsec_...` value in `.env.local` as `STRIPE_WEBHOOK_SECRET`.
 
 NotifyDB Pro is implemented as a flat product plan in the app. In Stripe, use a recurring flat-rate `$9/month` Price for `STRIPE_PRO_PRICE_ID`. A metered Price may require usage reporting and different checkout behavior.
+
+## Database-Native Agent
+
+NotifyDB can integrate with PostgreSQL and MySQL through a database outbox agent in `packages/db-agent`.
+
+The agent installs table-specific triggers that write to `notifydb_outbox`, then forwards pending rows to `POST /api/events`.
+
+```bash
+npm --workspace packages/db-agent install
+npm --workspace packages/db-agent test
+```
+
+Example runtime config:
+
+```bash
+NOTIFYDB_API_URL=https://notifydb.io
+NOTIFYDB_PROJECT_TOKEN=YOUR_PROJECT_TOKEN
+DATABASE_URL=postgresql://app:password@localhost:5432/app
+NOTIFYDB_TABLES=public.users,public.orders
+```
 
 ## Quotas
 
