@@ -6,6 +6,8 @@ Symfony MVP for database-change email notifications.
 
 ```bash
 cp .env.local.example .env.local
+npm install
+npm run build:css
 bin/console doctrine:migrations:migrate
 docker compose up -d
 symfony server:start -d
