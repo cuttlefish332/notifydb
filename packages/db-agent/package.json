@@ -7,7 +7,8 @@
     "notifydb-db-agent": "./bin/notifydb-db-agent.js"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:integration": "RUN_DB_AGENT_INTEGRATION=1 node --test test/integration.test.js"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

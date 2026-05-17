@@ -85,6 +85,7 @@ The agent installs table-specific triggers that write to `notifydb_outbox`, then
 ```bash
 npm --workspace packages/db-agent install
 npm --workspace packages/db-agent test
+RUN_DB_AGENT_INTEGRATION=1 npm --workspace packages/db-agent run test:integration
 ```
 
 Example runtime config:
