@@ -59,19 +59,26 @@ final class BillingController extends AbstractController
             $this->entityManager->flush();
         }
 
-        $session = $this->stripe->checkout->sessions->create([
-            'mode' => 'subscription',
-            'customer' => $customerId,
-            'line_items' => [[
-                'price' => $this->proPriceId,
-            ]],
-            'success_url' => rtrim($this->appUrl, '/').'/billing?checkout=success',
-            'cancel_url' => rtrim($this->appUrl, '/').'/billing?checkout=cancelled',
-            'metadata' => ['notifydb_user_id' => (string) $user->getId()],
-            'subscription_data' => [
+        try {
+            $session = $this->stripe->checkout->sessions->create([
+                'mode' => 'subscription',
+                'customer' => $customerId,
+                'line_items' => [[
+                    'price' => $this->proPriceId,
+                    'quantity' => 1,
+                ]],
+                'success_url' => rtrim($this->appUrl, '/').'/billing?checkout=success',
+                'cancel_url' => rtrim($this->appUrl, '/').'/billing?checkout=cancelled',
                 'metadata' => ['notifydb_user_id' => (string) $user->getId()],
-            ],
-        ]);
+                'subscription_data' => [
+                    'metadata' => ['notifydb_user_id' => (string) $user->getId()],
+                ],
+            ]);
+        } catch (ApiErrorException $exception) {
+            $this->addFlash('error', 'Stripe could not start checkout: '.$exception->getMessage());
+
+            return $this->redirectToRoute('billing_index');
+        }
 
         return $this->redirect((string) $session->url);
     }
