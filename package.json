@@ -7,8 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build:css": "tailwindcss -i assets/styles/input.css -o assets/styles/app.css --minify",
-    "watch:css": "tailwindcss -i assets/styles/input.css -o assets/styles/app.css --watch"
+    "build:css": "tailwindcss -i tailwind/input.css -o assets/styles/app.css --minify",
+    "watch:css": "tailwindcss -i tailwind/input.css -o assets/styles/app.css --watch"
   },
   "repository": {
     "type": "git",
